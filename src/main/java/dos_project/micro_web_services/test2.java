@@ -43,7 +43,7 @@ public class test2 {
                   book.put(meta.getColumnName(1), rs.getInt("book_id"));
                   book.put(meta.getColumnName(2), rs.getString("title"));
                   book.put(meta.getColumnName(3), rs.getString("description"));
-                  book.put(meta.getColumnName(4), rs.getInt("cost"));
+                  book.put(meta.getColumnName(4), rs.getDouble("cost"));
                   book.put(meta.getColumnName(5), rs.getInt("quantity"));
                   book.put(meta.getColumnName(6), rs.getString("topic"));
                   books.add(book);
