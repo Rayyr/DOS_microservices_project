@@ -39,7 +39,7 @@ public class test2 {
 
 			ResultSetMetaData meta = rs.getMetaData();
 			  while (rs.next()) {
-                  Map<String, Object> book = new HashMap<>();  
+                  Map<String, Object> book = new LinkedHashMap<>(); //we use linkedhashmap tp preserve the insertion order 
                   book.put(meta.getColumnName(1), rs.getInt("book_id"));
                   book.put(meta.getColumnName(2), rs.getString("title"));
                   book.put(meta.getColumnName(3), rs.getString("description"));
