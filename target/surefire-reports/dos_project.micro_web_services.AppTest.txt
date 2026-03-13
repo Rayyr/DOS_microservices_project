@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: dos_project.micro_web_services.AppTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.053 s -- in dos_project.micro_web_services.AppTest
