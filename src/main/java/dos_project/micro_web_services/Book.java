@@ -49,20 +49,71 @@ public class Book {
 		// passed id via path params of the request
 		patch("/updateCost/:id", (req, res) -> {
 			// header : json format
-			int id = Integer.parseInt(req.params(":id"));// extract topic from the URL
+			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
 			String body = req.body();// Read JSON body as String
 
 			Gson gson = new Gson();
 			Map<String, Double> sentUpdates = gson.fromJson(body, Map.class);
 
-			updateBookCostBasedToID(id, sentUpdates.get("newCost"));
+			int status =updateBookCostBasedToID(id, sentUpdates.get("newCost"));
+ 
+			if(status==1) {
+				Map<String, Object> modifiedBook = getModifiedBook(id);
+
+				res.type("application/json");
+				return   new Gson().toJson(modifiedBook);
+				}
+				res.type("text/plain");
+				return "sorry";
+		});
+		
+		
+		// Partial UPDATE action to update the quantity of the specified book based to the
+		// passed id via path params of the request
+		patch("/increaseQuantity/:id", (req, res) -> {
+			// header : json format
+			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
+			String body = req.body();// Read JSON body as String
+
+			Gson gson = new Gson();
+			Map<String, Object> sentUpdates = gson.fromJson(body, Map.class);
+
+			 
+			
+			int status=updateBookQuantityBasedToID(id,((Double) sentUpdates.get("newQuantity")).intValue());
+			
+			if(status==1) {
 			Map<String, Object> modifiedBook = getModifiedBook(id);
 
 			res.type("application/json");
 			return   new Gson().toJson(modifiedBook);
+			}
+			res.type("text/plain");
+			return "sorry";
 		});
 	}
 
+	
+	private static int updateBookQuantityBasedToID(int id, int newQuantity) {
+
+		try (Statement statement = Api.dbCon.createStatement();) {
+
+			String sql = "UPDATE Book SET quantity=? WHERE book_id=?";
+			try (PreparedStatement ps = Api.dbCon.prepareStatement(sql)) {
+				ps.setInt(1, newQuantity);
+				ps.setInt(2, id);
+				ps.executeUpdate();
+				return 1;//succes 
+			}
+
+		} catch (SQLException e) {
+			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
+			return -1;
+		}
+
+	}
+	
+	
 	private static  Map<String, Object> getModifiedBook(int id) {
 
 		Map<String, Object> book = new LinkedHashMap<String, Object>();
@@ -87,7 +138,7 @@ public class Book {
 		return book;
 	}
 
-	private static void updateBookCostBasedToID(int id, double newCost) {
+	private static int updateBookCostBasedToID(int id, double newCost) {
 
 		try (Statement statement = Api.dbCon.createStatement();) {
 
@@ -96,10 +147,12 @@ public class Book {
 				ps.setDouble(1, newCost);
 				ps.setInt(2, id);
 				ps.executeUpdate();
+				return 1;
 			}
 
 		} catch (SQLException e) {
 			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
+			return -1;
 		}
 
 	}
