@@ -9,9 +9,9 @@ import java.util.*;
 public class Book {
 
     static List<Map<String, Object>> books = new ArrayList<>();
+    
 
-	public static void routing() {
-
+	public static void routing( ) {
 		getData();
 		//GET action 
 		get("/getBooks/all", (req, res) -> {
@@ -25,17 +25,14 @@ public class Book {
 	
 	
 	
-	private static Connection connectWithDB() throws SQLException {
-	    return DriverManager.getConnection("jdbc:sqlite:C:\\Users\\hp\\eclipse-workspace\\micro_web_services\\DBs\\online_book_store.db");
-	}
 
 	
 	
 	
 	private static void getData() {
 		
-		try (Connection dbCon = connectWithDB();
-			     Statement statement = dbCon.createStatement();
+		try ( 
+			     Statement statement = Api.dbCon.createStatement();
 			     ResultSet rs = statement.executeQuery("SELECT * FROM Book")) {
 
 			ResultSetMetaData meta = rs.getMetaData();
@@ -51,7 +48,7 @@ public class Book {
               }
 
 			} catch (SQLException e) {
-				System.err.print("Sorry , there is an error with data base connection");
+				System.err.print("Sorry , there is an error data base connection : "+e.getMessage());
 			}
 		 
 	}
