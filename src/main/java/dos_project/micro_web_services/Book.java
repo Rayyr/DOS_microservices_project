@@ -47,7 +47,7 @@ public class Book {
 		// Update ops
 		// Partial UPDATE action to update the cost of the specified book based to the
 		// passed id via path params of the request
-		patch("/update/:id", (req, res) -> {
+		patch("/updateCost/:id", (req, res) -> {
 			// header : json format
 			int id = Integer.parseInt(req.params(":id"));// extract topic from the URL
 			String body = req.body();// Read JSON body as String
@@ -59,8 +59,7 @@ public class Book {
 			Map<String, Object> modifiedBook = getModifiedBook(id);
 
 			res.type("application/json");
-			return "The book with id = " + id + " cost has been sucessfully being updated\n " + "The updated book : \n"
-					 + new Gson().toJson(modifiedBook);
+			return   new Gson().toJson(modifiedBook);
 		});
 	}
 
