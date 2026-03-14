@@ -7,6 +7,7 @@ import java.sql.SQLException;
 public class Api {
 	
 	public static Connection dbCon;
+	
 	public static void main(String[] args) {
 
 		dbCon=connectWithDB();
