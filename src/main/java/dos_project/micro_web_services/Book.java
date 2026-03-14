@@ -9,6 +9,7 @@ import java.util.*;
 public class Book {
 
 	static List<Map<String, Object>> books;
+	static String error;
 
 	public static void routing() {
 
@@ -16,10 +17,16 @@ public class Book {
 		// GET action for all books
 		get("/getBooks/all", (req, res) -> {
 			books = getAllBooks();
+
+			res.type("text/plain");
+			if (error != null)
+				return error + "\n" + res.status();
+
 			if (books.size() == 0)
 				return "There is no books in the stock!";
+
 			res.type("application/json"); // response type
-			return new Gson().toJson(books); // convert to JSON
+			return new Gson().toJson(books); // convert the displayed response body to JSON
 		});
 
 		// GET action for specific books based to specific topic by passing it via path
@@ -27,8 +34,14 @@ public class Book {
 		get("/search/:topic", (req, res) -> {
 			String topic = req.params(":topic");// extract topic from the URL
 			books = getBooksBasedToTopic(topic);
+
+			res.type("text/plain");
+			if (error != null)
+				return error + "\n" + res.status();
+
 			if (books.size() == 0)
 				return "There is no matching books with the specified topic : " + topic;
+
 			res.type("application/json"); // response type
 			return new Gson().toJson(books); // convert to JSON
 		});
@@ -38,8 +51,14 @@ public class Book {
 		get("/info/:id", (req, res) -> {
 			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
 			books = getBookInfoBasedToID(id);
+
+			res.type("text/plain");
+			if (error != null)
+				return error + "\n" + res.status();
+
 			if (books.size() == 0)
 				return "There is no book associated with the specified ID : " + id;
+
 			res.type("application/json"); // response type
 			return new Gson().toJson(books); // convert to JSON
 		});
@@ -48,23 +67,28 @@ public class Book {
 		// Partial UPDATE action to update the cost of the specified book based to the
 		// passed id via path params of the request
 		patch("/updateCost/:id", (req, res) -> {
-			// header : json format
+			// header : json format(default)
 			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
-			String body = req.body();// Read JSON body as String
+			// the newCost will be inside req body
+			String body = req.body();// Read req JSON body as String
 
 			Gson gson = new Gson();
-			Map<String, Double> sentUpdates = gson.fromJson(body, Map.class);
+			Map<String, Double> sentUpdates = gson.fromJson(body, Map.class);// {"newCost":double_value};
 
 			int status = updateBookCostBasedToID(id, sentUpdates.get("newCost"));
 
+			res.type("text/plain");
 			if (status == 1) {
 				Map<String, Object> modifiedBook = getModifiedBook(id);
+
+				if (error != null)
+					return error + "\n" + res.status();// error in extracting the book
 
 				res.type("application/json");
 				return new Gson().toJson(modifiedBook);
 			}
-			res.type("text/plain");
-			return "Sorry the received cost cant be negative value";
+
+			return error + "\n" + res.status();
 		});
 
 		// Partial UPDATE action to update the quantity of the specified book based to
@@ -81,69 +105,70 @@ public class Book {
 
 			int status = updateBookQuantityBasedToID(id, ((Double) sentUpdates.get("newQuantity")).intValue());
 
-			if (status == 1) {
+			res.type("text/plain");
+
+			if (status == 1) {// no update error
 				Map<String, Object> modifiedBook = getModifiedBook(id);
+
+				if (error != null)
+					return error + "\n" + res.status();// error in extracting the book
 
 				res.type("application/json");
 				return new Gson().toJson(modifiedBook);
 			}
-			res.type("text/plain");
-			return "Sorry the received quantity cant be negative value";
+
+			// update error
+			return error + "\n" + res.status();
 		});
 
-		
-		
 		// POST op
 		// create action for new book
 		post("/addBook", (req, res) -> {
-			 
+
+			// the new book to be added will be in the req body
 			String body = req.body();
-			
+
 			Gson gson = new Gson();
 			Map<String, Object> sentBook = gson.fromJson(body, Map.class);
-			int status =addBook(sentBook);
-			
-			if(status==1) {
-				res.type("application/json");
-				return new Gson().toJson(sentBook);
-			}
+			addBook(sentBook);
+
 			res.type("text/plain");
-			return "Sorry the specified book cant be added to the system";
-			
+
+			if (error != null)
+				return error + "\n" + res.status();// error in adding the book
+
+			res.type("application/json");
+			return new Gson().toJson(sentBook);
+
+			// return "Sorry the specified book cant be added to the system";
+
 		});
 	}
 
-	
-	
-	private static int addBook(Map<String,Object> sentBook) {
+	private static void addBook(Map<String, Object> sentBook) {
 
-		System.out.print((Double)sentBook.get("book_id"));
-		
 		try (Statement statement = Api.dbCon.createStatement();) {
 
 			String sql = "insert into Book (book_id,title,description,cost,quantity,topic) values(?,?,?,?,?,?)";
 			try (PreparedStatement ps = Api.dbCon.prepareStatement(sql)) {
-				
-				ps.setInt(1, ((Double)sentBook.get("book_id")).intValue());
-				ps.setString(2, (String)sentBook.get("title"));
-				ps.setString(3, (String)sentBook.get("description"));
-				ps.setDouble(4, (Double)sentBook.get("cost"));
-				ps.setInt(5, ((Double)sentBook.get("quantity")).intValue());
-				ps.setString(6, (String)sentBook.get("topic"));
-				
+
+				ps.setInt(1, ((Double) sentBook.get("book_id")).intValue());
+				ps.setString(2, (String) sentBook.get("title"));
+				ps.setString(3, (String) sentBook.get("description"));
+				ps.setDouble(4, (Double) sentBook.get("cost"));
+				ps.setInt(5, ((Double) sentBook.get("quantity")).intValue());
+				ps.setString(6, (String) sentBook.get("topic"));
+
 				ps.executeUpdate();
-				return 1;// succes
+
 			}
 
 		} catch (SQLException e) {
-			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
-			return -1;
+			error = "Sorry , there is an error with data base : " + e.getMessage();
+
 		}
 	}
-	
-	
-	
-	
+
 	private static int updateBookQuantityBasedToID(int id, int newQuantity) {
 
 		try (Statement statement = Api.dbCon.createStatement();) {
@@ -157,7 +182,7 @@ public class Book {
 			}
 
 		} catch (SQLException e) {
-			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
+			error = "Sorry , there is an error with data base : " + e.getMessage();
 			return -1;
 		}
 
@@ -181,7 +206,7 @@ public class Book {
 		}
 
 		catch (SQLException e) {
-			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
+			error = "Sorry , there is an error with data base : " + e.getMessage();
 		}
 
 		return book;
@@ -200,7 +225,7 @@ public class Book {
 			}
 
 		} catch (SQLException e) {
-			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
+			error = "Sorry , there is an error with data base : " + e.getMessage();
 			return -1;
 		}
 
@@ -225,7 +250,7 @@ public class Book {
 			}
 
 		} catch (SQLException e) {
-			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
+			error = "Sorry , there is an error with data base : " + e.getMessage();
 		}
 		return allBooks;
 	}
@@ -252,7 +277,7 @@ public class Book {
 			}
 
 		} catch (SQLException e) {
-			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
+			error = "Sorry , there is an error with data base : " + e.getMessage();
 		}
 		return allBooks;
 	}
@@ -277,7 +302,7 @@ public class Book {
 			}
 
 		} catch (SQLException e) {
-			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
+			error = "Sorry , there is an error with data base : " + e.getMessage();
 		}
 		return allBooks;
 	}
