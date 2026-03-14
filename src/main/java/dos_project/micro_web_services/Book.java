@@ -64,7 +64,7 @@ public class Book {
 				return   new Gson().toJson(modifiedBook);
 				}
 				res.type("text/plain");
-				return "sorry";
+				return "Sorry the received cost cant be negative value";
 		});
 		
 		
@@ -89,7 +89,7 @@ public class Book {
 			return   new Gson().toJson(modifiedBook);
 			}
 			res.type("text/plain");
-			return "sorry";
+			return "Sorry the received quantity cant be negative value";
 		});
 	}
 
