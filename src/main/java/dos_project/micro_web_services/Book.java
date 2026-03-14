@@ -55,44 +55,94 @@ public class Book {
 			Gson gson = new Gson();
 			Map<String, Double> sentUpdates = gson.fromJson(body, Map.class);
 
-			int status =updateBookCostBasedToID(id, sentUpdates.get("newCost"));
- 
-			if(status==1) {
+			int status = updateBookCostBasedToID(id, sentUpdates.get("newCost"));
+
+			if (status == 1) {
 				Map<String, Object> modifiedBook = getModifiedBook(id);
 
 				res.type("application/json");
-				return   new Gson().toJson(modifiedBook);
-				}
-				res.type("text/plain");
-				return "Sorry the received cost cant be negative value";
+				return new Gson().toJson(modifiedBook);
+			}
+			res.type("text/plain");
+			return "Sorry the received cost cant be negative value";
 		});
-		
-		
-		// Partial UPDATE action to update the quantity of the specified book based to the
+
+		// Partial UPDATE action to update the quantity of the specified book based to
+		// the
 		// passed id via path params of the request
 		patch("/increaseQuantity/:id", (req, res) -> {
 			// header : json format
+
 			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
 			String body = req.body();// Read JSON body as String
 
-			Gson gson = new Gson(); 
+			Gson gson = new Gson();
 			Map<String, Object> sentUpdates = gson.fromJson(body, Map.class);
 
-			 
-			
-			int status=updateBookQuantityBasedToID(id,((Double) sentUpdates.get("newQuantity")).intValue());
-			
-			if(status==1) {
-			Map<String, Object> modifiedBook = getModifiedBook(id);
+			int status = updateBookQuantityBasedToID(id, ((Double) sentUpdates.get("newQuantity")).intValue());
 
-			res.type("application/json");
-			return   new Gson().toJson(modifiedBook);
+			if (status == 1) {
+				Map<String, Object> modifiedBook = getModifiedBook(id);
+
+				res.type("application/json");
+				return new Gson().toJson(modifiedBook);
 			}
 			res.type("text/plain");
 			return "Sorry the received quantity cant be negative value";
 		});
+
+		
+		
+		// POST op
+		// create action for new book
+		post("/addBook", (req, res) -> {
+			 
+			String body = req.body();
+			
+			Gson gson = new Gson();
+			Map<String, Object> sentBook = gson.fromJson(body, Map.class);
+			int status =addBook(sentBook);
+			
+			if(status==1) {
+				res.type("application/json");
+				return new Gson().toJson(sentBook);
+			}
+			res.type("text/plain");
+			return "Sorry the specified book cant be added to the system";
+			
+		});
 	}
 
+	
+	
+	private static int addBook(Map<String,Object> sentBook) {
+
+		System.out.print((Double)sentBook.get("book_id"));
+		
+		try (Statement statement = Api.dbCon.createStatement();) {
+
+			String sql = "insert into Book (book_id,title,description,cost,quantity,topic) values(?,?,?,?,?,?)";
+			try (PreparedStatement ps = Api.dbCon.prepareStatement(sql)) {
+				
+				ps.setInt(1, ((Double)sentBook.get("book_id")).intValue());
+				ps.setString(2, (String)sentBook.get("title"));
+				ps.setString(3, (String)sentBook.get("description"));
+				ps.setDouble(4, (Double)sentBook.get("cost"));
+				ps.setInt(5, ((Double)sentBook.get("quantity")).intValue());
+				ps.setString(6, (String)sentBook.get("topic"));
+				
+				ps.executeUpdate();
+				return 1;// succes
+			}
+
+		} catch (SQLException e) {
+			System.err.print("Sorry , there is an error with data base : " + e.getMessage());
+			return -1;
+		}
+	}
+	
+	
+	
 	
 	private static int updateBookQuantityBasedToID(int id, int newQuantity) {
 
@@ -103,7 +153,7 @@ public class Book {
 				ps.setInt(1, newQuantity);
 				ps.setInt(2, id);
 				ps.executeUpdate();
-				return 1;//succes 
+				return 1;// succes
 			}
 
 		} catch (SQLException e) {
@@ -112,15 +162,14 @@ public class Book {
 		}
 
 	}
-	
-	
-	private static  Map<String, Object> getModifiedBook(int id) {
+
+	private static Map<String, Object> getModifiedBook(int id) {
 
 		Map<String, Object> book = new LinkedHashMap<String, Object>();
 
 		try (Statement statement = Api.dbCon.createStatement();
 				ResultSet rs = statement.executeQuery("SELECT * FROM Book where book_id=" + id)) {
-			
+
 			ResultSetMetaData meta = rs.getMetaData();
 
 			book.put(meta.getColumnName(2), rs.getString("title"));
