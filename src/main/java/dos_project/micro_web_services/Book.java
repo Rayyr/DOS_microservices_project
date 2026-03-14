@@ -75,7 +75,7 @@ public class Book {
 			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
 			String body = req.body();// Read JSON body as String
 
-			Gson gson = new Gson();
+			Gson gson = new Gson(); 
 			Map<String, Object> sentUpdates = gson.fromJson(body, Map.class);
 
 			 
