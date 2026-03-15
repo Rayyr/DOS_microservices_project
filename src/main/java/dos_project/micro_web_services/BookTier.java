@@ -59,12 +59,93 @@ public class BookTier {
 			res.type("application/json"); // response type
 			return new Gson().toJson(books); // convert to JSON
 		});
+		
+		
+		
+		
+		// Partial UPDATE action to update the cost of the specified book based to the
+		// passed id via path params of the request
+		patch("/updateCost/:id", (req, res) -> {
+			
+			// header : json format(default)
+			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
+			// the newCost will be inside req body
+			String body = req.body();// Read req JSON body as String
+			 
+			Gson gson = new Gson();
+			Map<String, Double> sentUpdates = gson.fromJson(body, Map.class);// {"newCost":double_value};
+
+			int status = updateBookCostBasedToID(id, sentUpdates.get("newCost"));
+
+			res.type("text/plain");
+			if (status == 1) {
+				Map<String, Object> modifiedBook = getModifiedBook(id);
+
+				if (error != null)
+					return error + "\n" + res.status();// error in extracting the book
+
+				res.type("application/json");
+				return new Gson().toJson(modifiedBook);
+			}
+
+			return error + "\n" + res.status();
+		});
+		
+		
 		}
 		
 		else System.err.print(error);
 	return ;
 	}
 	
+	
+	
+	
+	private static Map<String, Object> getModifiedBook(int id) {
+
+		Map<String, Object> book = new LinkedHashMap<String, Object>();
+
+		try (Statement statement = dbCon.createStatement();
+				ResultSet rs = statement.executeQuery("SELECT * FROM Book where book_id=" + id)) {
+
+			ResultSetMetaData meta = rs.getMetaData();
+
+			book.put(meta.getColumnName(2), rs.getString("title"));
+			book.put(meta.getColumnName(3), rs.getString("description"));
+			book.put(meta.getColumnName(4), rs.getDouble("cost"));
+			book.put(meta.getColumnName(5), rs.getInt("quantity"));
+			book.put(meta.getColumnName(6), rs.getString("topic"));
+
+		}
+
+		catch (SQLException e) {
+			error = "Sorry , there is an error with data base : " + e.getMessage();
+		}
+
+		return book;
+	}
+	
+	
+	
+
+	private static int updateBookCostBasedToID(int id, double newCost) {
+
+		try (Statement statement =dbCon.createStatement();) {
+
+			String sql = "UPDATE Book SET cost=? WHERE book_id=?";
+			try (PreparedStatement ps = dbCon.prepareStatement(sql)) {
+				ps.setDouble(1, newCost);
+				ps.setInt(2, id);
+				ps.executeUpdate();
+				return 1;
+			}
+
+		} catch (SQLException e) {
+			error = "Sorry , there is an error with data base : " + e.getMessage();
+			return -1;
+		}
+
+	}
 	
 	
 	
