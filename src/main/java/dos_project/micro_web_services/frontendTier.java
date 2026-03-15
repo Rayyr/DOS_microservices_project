@@ -11,7 +11,7 @@ import java.io.*;
 
 public class frontendTier {
 
-	public static Connection dbCon;
+	 
 
 	public static void main(String[] args) {
 
@@ -53,16 +53,43 @@ public class frontendTier {
 		});
 
 	
+		
+		
+
+		// get books (calls catalog service)
+		get("/books/info/:id", (req, res) -> {
+
+			String id = req.params(":id");// extract topic from the URL
+
+			
+			 
+			//redirect the request from the front end to book tier
+			//send the request to lower layer which is : booktier
+            URL url = new URL("http://localhost:4560/info/"+id);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+            con.setRequestMethod("GET");
+
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()));
+
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+
+            in.close();
+
+            if(con.getContentType().equals("application/json"))//get the sender response type format 
+            res.type("application/json");
+            else //plain text
+            res.type("text/plain");
+            return response.toString();
+		});
 	}
 
-	private static Connection connectWithDB() {
-		try {
-			return DriverManager.getConnection(
-					"jdbc:sqlite:C:\\Users\\hp\\eclipse-workspace\\micro_web_services\\DBs\\online_book_store.db");
-		} catch (SQLException e) {
-			System.err.print("Sorry , there is an error with data base connection");
-			return null;
-		}
-	}
+ 
 
 }

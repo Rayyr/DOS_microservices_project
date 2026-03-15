@@ -23,7 +23,8 @@ public class BookTier {
 		//the port that the book_tier machine will listen from 
 		port(4560);
 		 
-		
+		// GET action for specific books based to specific topic by passing it via path
+				// params of the request
 		get("/search/:topic",(req,res)->{
 			 
 			String topic = req.params(":topic");// extract topic from the URL
@@ -40,11 +41,58 @@ public class BookTier {
 			return new Gson().toJson(books); // convert to JSON
 		});
 
+		
+		
+		// GET action for specific book information based to specific id by passing it
+		// via path params of the request
+		get("/info/:id", (req, res) -> {
+			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
+			books = getBookInfoBasedToID(id);
+
+			res.type("text/plain");
+			if (error != null)
+				return error + "\n" + res.status();
+
+			if (books.size() == 0)
+				return "There is no book associated with the specified ID : " + id;
+
+			res.type("application/json"); // response type
+			return new Gson().toJson(books); // convert to JSON
+		});
 		}
 		
 		else System.err.print(error);
 	return ;
 	}
+	
+	
+	
+	
+	
+	private static List<Map<String, Object>> getBookInfoBasedToID(int id) {
+
+		List<Map<String, Object>> allBooks = new ArrayList<>();
+		try (Statement statement = dbCon.createStatement();
+				ResultSet rs = statement.executeQuery("SELECT * from Book where book_id=" + id)) {
+
+			ResultSetMetaData meta = rs.getMetaData();
+			while (rs.next()) {
+				Map<String, Object> book = new LinkedHashMap<>(); // we use linkedhashmap tp preserve the insertion
+																	// order
+				book.put(meta.getColumnName(2), rs.getString("title"));
+				book.put(meta.getColumnName(3), rs.getString("description"));
+				book.put(meta.getColumnName(4), rs.getDouble("cost"));
+				book.put(meta.getColumnName(5), rs.getInt("quantity"));
+				book.put(meta.getColumnName(6), rs.getString("topic"));
+				allBooks.add(book);
+			}
+
+		} catch (SQLException e) {
+			error = "Sorry , there is an error with data base : " + e.getMessage();
+		}
+		return allBooks;
+	}
+	
 	
 	
 	
