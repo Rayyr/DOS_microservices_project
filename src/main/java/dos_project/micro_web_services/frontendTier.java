@@ -6,6 +6,7 @@ import java.sql.SQLException;
 
 import static spark.Spark.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.io.*;
 
 public class frontendTier {
@@ -14,13 +15,20 @@ public class frontendTier {
 
 	public static void main(String[] args) {
 
-		port(4569);
+		port(4566);
 
 		// get books (calls catalog service)
-		get("/aa", (req, res) -> {
+		get("/books/search/:topic", (req, res) -> {
 
+			String topic = req.params(":topic");// extract topic from the URL
 
-            URL url = new URL("http://localhost:4567/bb");
+			
+			//encode the illegal chars as spaces since they are not allowed 
+			 String encodedTopic = URLEncoder.encode(topic, StandardCharsets.UTF_8) .replace("+", "%20");
+			 
+			//redirect the request from the front end to book tier
+			//send the request to lower layer which is : booktier
+            URL url = new URL("http://localhost:4560/search/"+encodedTopic);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
             con.setRequestMethod("GET");
@@ -37,6 +45,10 @@ public class frontendTier {
 
             in.close();
 
+            if(con.getContentType().equals("application/json"))//get the sender response type format 
+            res.type("application/json");
+            else //plain text
+            res.type("text/plain");
             return response.toString();
 		});
 
