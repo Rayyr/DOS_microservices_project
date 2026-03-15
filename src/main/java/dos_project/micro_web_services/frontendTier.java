@@ -8,7 +8,7 @@ import static spark.Spark.*;
 import java.net.*;
 import java.io.*;
 
-public class Api {
+public class frontendTier {
 
 	public static Connection dbCon;
 
