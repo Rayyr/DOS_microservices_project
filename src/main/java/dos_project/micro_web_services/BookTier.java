@@ -27,12 +27,13 @@ public class BookTier {
 				// params of the request
 		get("/search/:topic",(req,res)->{
 			 
+			error=null;
 			String topic = req.params(":topic");// extract topic from the URL
 			books = getBooksBasedToTopic(topic);
 
 			res.type("text/plain");
 			if (error != null)
-				return error + "\n" + res.status();
+				return error ;
 
 			if (books.size() == 0)
 				return "There is no matching books with the specified topic : " + topic;
@@ -46,12 +47,13 @@ public class BookTier {
 		// GET action for specific book information based to specific id by passing it
 		// via path params of the request
 		get("/info/:id", (req, res) -> {
+			error=null;
 			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
 			books = getBookInfoBasedToID(id);
 
 			res.type("text/plain");
 			if (error != null)
-				return error + "\n" + res.status();
+				return error ;
 
 			if (books.size() == 0)
 				return "There is no book associated with the specified ID : " + id;
@@ -67,6 +69,7 @@ public class BookTier {
 		// passed id via path params of the request
 		patch("/updateCost/:id", (req, res) -> {
 			
+			error=null;
 			// header : json format(default)
 			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
 			// the newCost will be inside req body
@@ -82,14 +85,48 @@ public class BookTier {
 				Map<String, Object> modifiedBook = getModifiedBook(id);
 
 				if (error != null)
-					return error + "\n" + res.status();// error in extracting the book
+					return error ;// error in extracting the book
 
 				res.type("application/json");
 				return new Gson().toJson(modifiedBook);
 			}
 
-			return error + "\n" + res.status();
+			return error ;
 		});
+		
+		
+		
+		// Partial UPDATE action to update the quantity of the specified book based to
+		// the passed id via path params of the request
+		patch("/increaseQuantity/:id", (req, res) -> {
+			// header : json format
+
+			error=null;
+			int id = Integer.parseInt(req.params(":id"));// extract id from the URL
+			String body = req.body();// Read JSON body as String
+
+			Gson gson = new Gson();
+			Map<String, Object> sentUpdates = gson.fromJson(body, Map.class);
+
+			int status = updateBookQuantityBasedToID(id, ((Double) sentUpdates.get("newQuantity")).intValue());
+
+			res.type("text/plain");
+
+			if (status == 1) {// no update error
+				Map<String, Object> modifiedBook = getModifiedBook(id);
+
+				if (error != null)
+					return error ;// error in extracting the book
+
+				res.type("application/json");
+				return new Gson().toJson(modifiedBook);
+			}
+
+			// update error
+			return error ;
+		});
+		
+		
 		
 		
 		}
@@ -99,6 +136,25 @@ public class BookTier {
 	}
 	
 	
+	
+	private static int updateBookQuantityBasedToID(int id, int newQuantity) {
+
+		try (Statement statement = dbCon.createStatement();) {
+
+			String sql = "UPDATE Book SET quantity=? WHERE book_id=?";
+			try (PreparedStatement ps = dbCon.prepareStatement(sql)) {
+				ps.setInt(1, newQuantity);
+				ps.setInt(2, id);
+				ps.executeUpdate();
+				return 1;// succes
+			}
+
+		} catch (SQLException e) {
+			error = "Sorry , there is an error with data base : " + e.getMessage();
+			return -1;
+		}
+
+	}
 	
 	
 	private static Map<String, Object> getModifiedBook(int id) {
