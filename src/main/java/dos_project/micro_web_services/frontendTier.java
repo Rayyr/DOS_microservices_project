@@ -20,6 +20,10 @@ import java.io.*;
 
 public class frontendTier {
 
+	//gson reads the numeric values as double 
+	public static int status;
+	public static String error;
+	
 	public static void main(String[] args) {
 
 		port(4566);
@@ -129,7 +133,8 @@ public class frontendTier {
 		// UPDATE book quantity (calls catalog(book) service)
 		patch("/books/increaseQuantity/:id", (req, res) -> {
 
-			String error = null;// initial value
+			status=1;
+			error=null;
 		/*	// the quantity must be increased when it is updated since we cant decrease it
 			// in case there are an prebooked orders ..
 			// but when the order is submitted there is implicit calling for route to
@@ -155,14 +160,29 @@ public class frontendTier {
 			Map<String, Object> bodyMap = gson.fromJson(req.body(), Map.class);
 			int newQuantity = ((Double) bodyMap.get("newQuantity")).intValue();// from req body
 
-			int oldQuantity = getBookQuantity(Integer.parseInt(id), error); // your method
-//after sql query the error may be modified in case of Exception
-			if (error != null) {
+			//Quantity verification 
+			//verify it is integral value as 2,3.0...
+			if(newQuantity!=(Double)bodyMap.get("newQuantity")) {
+				res.type("text/plain");
+				return "Sorry the new quantity must be integral value";
+			}
+			 
+			int oldQuantity = getBookQuantity(Integer.parseInt(id));  
+			
+			//DB issue
+			if(status==-1) {
 				res.type("text/plain");
 				return error;
 			}
+	 
+			//verify it is + value
+			if(newQuantity <= 0) {
+				res.type("text/plain");
+				return "Sorry the new quantity must be positive";
+			}
 
-			if (newQuantity < oldQuantity) {
+			//verify it is > oldQuantity
+			if (newQuantity <= oldQuantity) {
 				res.type("text/plain");
 				return "Sorry the new quantity must be strictlly greater than the old quantity";
 			}
@@ -203,6 +223,23 @@ public class frontendTier {
 			con.setRequestProperty("Content-Type", "application/json");
 			con.setDoOutput(true);
 
+			Gson gson = new Gson();
+			Map<String, Object> bodyMap = gson.fromJson(req.body(), Map.class);
+			int quantity = ((Double) bodyMap.get("quantity")).intValue();// from req body
+
+			 //Quantity verification			
+			//verify it is integral value as 2,3.0...
+			if(quantity!=(Double)bodyMap.get("quantity")) {//5!=5.3
+				res.type("text/plain");
+				return "Sorry the new quantity must be integral value";
+			}
+			
+			//verify it is + value
+			if(quantity <= 0) {
+				res.type("text/plain");
+				return "Sorry the new quantity must be positive";
+			}
+			
 			// Write body to write the new book to be added
 			try (OutputStream os = con.getOutputStream()) {
 				os.write(req.bodyAsBytes());
@@ -227,19 +264,20 @@ public class frontendTier {
 		});
 	}
 
-	private static int getBookQuantity(int id, String error) {
+	private static int getBookQuantity(int id) {
 
 		try (Connection con = DriverManager.getConnection(
 				"jdbc:sqlite:C:\\Users\\hp\\eclipse-workspace\\micro_web_services\\DBs\\online_book_store.db");
 				Statement statement = con.createStatement();) {
 			ResultSet rs = statement.executeQuery("SELECT quantity FROM Book where book_id=" + id);
 
-			error = null;
+			 status=1;
 			return rs.getInt("quantity");
 
 		} catch (SQLException e) {
-			error = "Sorry , there is an error with data base : " + e.getMessage();
-			return -1;
+			error= "Sorry , there is an error with data base : " + e.getMessage();
+			status=-1;
+			return -1;//just to return such as a value
 		}
 
 	}
