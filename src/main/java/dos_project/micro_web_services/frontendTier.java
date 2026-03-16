@@ -137,7 +137,7 @@ public class frontendTier {
 		
 		
 		// UPDATE book quantity (calls catalog(book) service)
-		patch("/books/updateQuantity/:id", (req, res) -> {
+		patch("/books/increaseQuantity/:id", (req, res) -> {
 
 			 
 			String id = req.params(":id");// extract topic from the URL
@@ -155,6 +155,50 @@ public class frontendTier {
 
             
             // Write body to write the new quantity
+            try (OutputStream os = con.getOutputStream()) {
+                os.write(req.bodyAsBytes());
+            }
+             
+            
+            
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()));
+
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+
+            in.close();
+
+            if(con.getContentType().equals("application/json"))//get the sender response type format 
+            res.type("application/json");
+            else //plain text
+            res.type("text/plain");
+            return response.toString();
+		});
+		
+		
+		
+		
+		// CREATE book (calls catalog(book) service)
+		post("/books/addBook", (req, res) -> {
+
+			 
+			
+			//redirect the request from the front end to book tier
+			//send the request to lower layer which is : booktier
+            URL url = new URL("http://localhost:4560/addBook");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+            con.setRequestMethod("POST"); 
+             con.setRequestProperty("Content-Type", "application/json");
+            con.setDoOutput(true);
+
+            
+            // Write body to write the new book to be added
             try (OutputStream os = con.getOutputStream()) {
                 os.write(req.bodyAsBytes());
             }

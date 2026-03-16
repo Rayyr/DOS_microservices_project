@@ -128,12 +128,62 @@ public class BookTier {
 		
 		
 		
+		// POST op
+		// create action for new book
+		post("/addBook", (req, res) -> {
+
+			error=null;//to earse the previous query error if it is have error
+			// the new book to be added will be in the req body
+			String body = req.body();
+
+			Gson gson = new Gson();
+			Map<String, Object> sentBook = gson.fromJson(body, Map.class);
+			addBook(sentBook);
+
+			res.type("text/plain");
+
+			if (error != null)
+				return error ;// error in adding the book
+
+			res.type("application/json");
+			return new Gson().toJson(sentBook);
+
+		});
+		
 		
 		}
 		
 		else System.err.print(error);
 	return ;
 	}
+	
+	
+	
+	
+	private static void addBook(Map<String, Object> sentBook) {
+
+		try (Statement statement = dbCon.createStatement();) {
+
+			String sql = "insert into Book (book_id,title,description,cost,quantity,topic) values(?,?,?,?,?,?)";
+			try (PreparedStatement ps = dbCon.prepareStatement(sql)) {
+
+				ps.setInt(1, ((Double) sentBook.get("book_id")).intValue());
+				ps.setString(2, (String) sentBook.get("title"));
+				ps.setString(3, (String) sentBook.get("description"));
+				ps.setDouble(4, (Double) sentBook.get("cost"));
+				ps.setInt(5, ((Double) sentBook.get("quantity")).intValue());
+				ps.setString(6, (String) sentBook.get("topic"));
+
+				ps.executeUpdate();
+
+			}
+
+		} catch (SQLException e) {
+			error = "Sorry , there is an error with data base : " + e.getMessage();
+
+		}
+	}
+	
 	
 	
 	
