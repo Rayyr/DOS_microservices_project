@@ -107,6 +107,17 @@ public class frontendTier {
 			con.setRequestProperty("Content-Type", "application/json");
 			con.setDoOutput(true);
 
+			Gson gson = new Gson();
+			Map<String, Object> bodyMap = gson.fromJson(req.body(), Map.class);
+			double cost = ((Double) bodyMap.get("cost"));// from req body
+
+			//Cost verification
+			//verify it is + value
+			if(cost<=0) {
+				res.type("text/plain");
+				return "Sorry the cost must be positive (>0)";
+			}
+			
 			// Write body to write the new cost
 			try (OutputStream os = con.getOutputStream()) {
 				os.write(req.bodyAsBytes());
@@ -178,7 +189,7 @@ public class frontendTier {
 			//verify it is + value
 			if(newQuantity <= 0) {
 				res.type("text/plain");
-				return "Sorry the new quantity must be positive";
+				return "Sorry the new quantity must be positive (>0)";
 			}
 
 			//verify it is > oldQuantity
@@ -211,7 +222,7 @@ public class frontendTier {
 			return response.toString();
 		});
 
-		// CREATE book (calls catalog(book) service)
+		// CREATE new book (calls catalog(book) service)
 		post("/books/addBook", (req, res) -> {
 
 			// redirect the request from the front end to book tier
@@ -226,19 +237,29 @@ public class frontendTier {
 			Gson gson = new Gson();
 			Map<String, Object> bodyMap = gson.fromJson(req.body(), Map.class);
 			int quantity = ((Double) bodyMap.get("quantity")).intValue();// from req body
+			double cost = ((Double) bodyMap.get("cost"));// from req body
 
 			 //Quantity verification			
 			//verify it is integral value as 2,3.0...
 			if(quantity!=(Double)bodyMap.get("quantity")) {//5!=5.3
 				res.type("text/plain");
-				return "Sorry the new quantity must be integral value";
+				return "Sorry the quantity must be integral value";
 			}
 			
 			//verify it is + value
 			if(quantity <= 0) {
 				res.type("text/plain");
-				return "Sorry the new quantity must be positive";
+				return "Sorry the quantity must be positive (>0)";
 			}
+			
+			
+			//Cost verification
+			//verify it is + value
+			if(cost <= 0) {
+				res.type("text/plain");
+				return "Sorry the cost must be positive (>0)";
+			}
+			
 			
 			// Write body to write the new book to be added
 			try (OutputStream os = con.getOutputStream()) {
