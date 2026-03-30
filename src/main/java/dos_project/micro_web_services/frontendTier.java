@@ -92,7 +92,7 @@ public class frontendTier {
 		});
 
 		// UPDATE book cost (calls catalog(book) service)
-		patch("/books/updateCost/:id", (req, res) -> {
+		get("/books/updateCost/:id", (req, res) -> {
 
 			String id = req.params(":id");// extract topic from the URL
 
@@ -109,7 +109,7 @@ public class frontendTier {
 
 			Gson gson = new Gson();
 			Map<String, Object> bodyMap = gson.fromJson(req.body(), Map.class);
-			double cost = ((Double) bodyMap.get("cost"));// from req body
+			double cost = ((Double) bodyMap.get("newCost"));// from req body
 
 			//Cost verification
 			//verify it is + value
@@ -142,7 +142,7 @@ public class frontendTier {
 		});
 
 		// UPDATE book quantity (calls catalog(book) service)
-		patch("/books/increaseQuantity/:id", (req, res) -> {
+		get("/books/increaseQuantity/:id", (req, res) -> {
 
 			status=1;
 			error=null;
@@ -187,6 +187,7 @@ public class frontendTier {
 			}
 	 
 			//verify it is + value
+			/*in case it is = 0 then it can be detected in the last verification step since when you create a book it is invalid to make its quantity=0(logically)*/
 			if(newQuantity <= 0) {
 				res.type("text/plain");
 				return "Sorry the new quantity must be positive (>0)";
@@ -223,7 +224,7 @@ public class frontendTier {
 		});
 
 		// CREATE new book (calls catalog(book) service)
-		post("/books/addBook", (req, res) -> {
+		get("/books/addBook", (req, res) -> {
 
 			// redirect the request from the front end to book tier
 			// send the request to lower layer which is : booktier
@@ -283,12 +284,115 @@ public class frontendTier {
 				res.type("text/plain");
 			return response.toString();
 		});
+		
+		
+
+		// make order (calls order service)
+		get("/orders/makeOrder/:id/:req_q", (req, res) -> {
+
+			String id = req.params(":id");// extract id from the URL
+			String req_q = req.params(":req_q");// extract req_q from the URL
+			
+			// redirect the request from the front end to order tier
+			// send the request to lower layer which is : ordertier
+			URL url = new URL("http://localhost:4561/makeOrder/" + id + "/" + req_q);
+			HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+			con.setRequestMethod("POST");
+ 
+/*
+			System.out.println(req_q);
+			System.out.println((int)Double.parseDouble(req_q));
+			System.out.print(Double.parseDouble(req_q));*/
+			 //Quantity verification
+			//verify it is integral value
+			if((int)Double.parseDouble(req_q)!=Double.parseDouble(req_q)) {
+				res.type("text/plain");
+				return "Sorry the quantity must be integral value";
+			}
+			
+			//verify it is + value
+			if(Integer.parseInt(req_q) <= 0) {
+				res.type("text/plain");
+				return "Sorry the quantity must be positive (>0)";
+			}
+			
+			 
+
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+			String inputLine;
+			StringBuilder response = new StringBuilder();
+
+			while ((inputLine = in.readLine()) != null) {
+				response.append(inputLine);
+			}
+
+			in.close();
+
+			if (con.getContentType().equals("application/json"))// get the sender response type format
+				res.type("application/json");
+			else // plain text
+				res.type("text/plain");
+			
+			return response.toString();
+			 
+		});
+		get("/books/delete/:id", (req, res) -> {
+
+		    String id = req.params(":id");
+
+		    URL url = new URL("http://localhost:4561/deleteBook/" + id);
+		    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+		    con.setRequestMethod("DELETE");
+
+		    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+		    String inputLine;
+		    StringBuilder response = new StringBuilder();
+
+		    while ((inputLine = in.readLine()) != null) {
+		        response.append(inputLine);
+		    }
+
+		    in.close();
+
+		    res.type("text/plain");
+		    return response.toString();
+		});
+		
+		get("/orders/getOrders", (req, res) -> {
+
+		    URL url = new URL("http://localhost:4561/getOrders");
+		    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+		    con.setRequestMethod("GET");
+
+		    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+		    String inputLine;
+		    StringBuilder response = new StringBuilder();
+
+		    while ((inputLine = in.readLine()) != null) {
+		        response.append(inputLine);
+		    }
+
+		    in.close();
+
+		    if (con.getContentType().equals("application/json"))
+		        res.type("application/json");
+		    else
+		        res.type("text/plain");
+
+		    return response.toString();
+		});
 	}
+
 
 	private static int getBookQuantity(int id) {
 
-		try (Connection con = DriverManager.getConnection(
-				"jdbc:sqlite:C:\\Users\\hp\\eclipse-workspace\\micro_web_services\\DBs\\online_book_store.db");
+		try (Connection con = DriverManager.getConnection("jdbc:sqlite:C:\\Users\\PC\\eclipse-workspace\\DOS_microservices_project\\DBs\\online_book_store.db");
 				Statement statement = con.createStatement();) {
 			ResultSet rs = statement.executeQuery("SELECT quantity FROM Book where book_id=" + id);
 

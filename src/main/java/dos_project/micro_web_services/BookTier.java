@@ -8,17 +8,14 @@ import java.util.*;
 
 public class BookTier {
 
-	public static Connection dbCon;
+	 
 	public static String error;
 	static List<Map<String, Object>> books;
 
 	
 	public static void main(String[] args) {
 	
-		//database connection
-		dbCon=connectWithDB();
-		
-		if(dbCon!=null) {
+	 
 			
 		//the port that the book_tier machine will listen from 
 		port(4560);
@@ -33,7 +30,7 @@ public class BookTier {
 
 			res.type("text/plain");
 			if (error != null)
-				return error ;
+				return error;
 
 			if (books.size() == 0)
 				return "There is no matching books with the specified topic : " + topic;
@@ -151,18 +148,15 @@ public class BookTier {
 		});
 		
 		
-		}
-		
-		else System.err.print(error);
+		 
 	return ;
 	}
 	
 	
-	
-	
 	private static void addBook(Map<String, Object> sentBook) {
 
-		try (Statement statement = dbCon.createStatement();) {
+		try (Connection dbCon=connectWithDB();
+				Statement statement = dbCon.createStatement();) {
 
 			String sql = "insert into Book (book_id,title,description,cost,quantity,topic) values(?,?,?,?,?,?)";
 			try (PreparedStatement ps = dbCon.prepareStatement(sql)) {
@@ -189,7 +183,8 @@ public class BookTier {
 	
 	private static int updateBookQuantityBasedToID(int id, int newQuantity) {
 
-		try (Statement statement = dbCon.createStatement();) {
+		try (Connection dbCon=connectWithDB();
+				Statement statement = dbCon.createStatement();) {
 
 			String sql = "UPDATE Book SET quantity=? WHERE book_id=?";
 			try (PreparedStatement ps = dbCon.prepareStatement(sql)) {
@@ -211,7 +206,8 @@ public class BookTier {
 
 		Map<String, Object> book = new LinkedHashMap<String, Object>();
 
-		try (Statement statement = dbCon.createStatement();
+		try (Connection dbCon=connectWithDB();
+				Statement statement = dbCon.createStatement();
 				ResultSet rs = statement.executeQuery("SELECT * FROM Book where book_id=" + id)) {
 
 			ResultSetMetaData meta = rs.getMetaData();
@@ -236,7 +232,8 @@ public class BookTier {
 
 	private static int updateBookCostBasedToID(int id, double newCost) {
 
-		try (Statement statement =dbCon.createStatement();) {
+		try (Connection dbCon=connectWithDB();
+				Statement statement =dbCon.createStatement();) {
 
 			String sql = "UPDATE Book SET cost=? WHERE book_id=?";
 			try (PreparedStatement ps = dbCon.prepareStatement(sql)) {
@@ -259,7 +256,8 @@ public class BookTier {
 	private static List<Map<String, Object>> getBookInfoBasedToID(int id) {
 
 		List<Map<String, Object>> allBooks = new ArrayList<>();
-		try (Statement statement = dbCon.createStatement();
+		try (Connection dbCon=connectWithDB();
+				Statement statement = dbCon.createStatement();
 				ResultSet rs = statement.executeQuery("SELECT * from Book where book_id=" + id)) {
 
 			ResultSetMetaData meta = rs.getMetaData();
@@ -285,9 +283,10 @@ public class BookTier {
 	
 	
 	private static List<Map<String, Object>> getBooksBasedToTopic(String topic) {
-
+//i used try with resources syntax so after the db connection is made when the try scope is ended then by default the db connection will be closed to avoid db conflicts
 		List<Map<String, Object>> allBooks = new ArrayList<>();
-		try (Statement statement = dbCon.createStatement();
+		try (Connection dbCon=connectWithDB();
+				Statement statement = dbCon.createStatement();
 				ResultSet rs = statement.executeQuery("SELECT book_id,title FROM Book where topic=\'" + topic + "\'")) {
 
 			ResultSetMetaData meta = rs.getMetaData();
@@ -296,12 +295,6 @@ public class BookTier {
 																	// order
 				book.put(meta.getColumnName(1), rs.getInt("book_id"));
 				book.put(meta.getColumnName(2), rs.getString("title"));
-				/*
-				 * book.put(meta.getColumnName(3), rs.getString("description"));
-				 * book.put(meta.getColumnName(4), rs.getDouble("cost"));
-				 * book.put(meta.getColumnName(5), rs.getInt("quantity"));
-				 * book.put(meta.getColumnName(6), rs.getString("topic"));
-				 */
 				allBooks.add(book);
 			}
 
@@ -320,7 +313,7 @@ public class BookTier {
 	
 	private static Connection connectWithDB()   {
 	    try {
-			return DriverManager.getConnection("jdbc:sqlite:C:\\Users\\hp\\eclipse-workspace\\micro_web_services\\DBs\\online_book_store.db");
+			return DriverManager.getConnection("jdbc:sqlite:C:\\Users\\\\PC\\eclipse-workspace\\DOS_microservices_project\\DBs\\online_book_store.db");
 		} catch (SQLException e) {
 			error="Sorry , there is an error with data base connection"+e.getMessage();
 			return null;
