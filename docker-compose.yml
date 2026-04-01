@@ -1,0 +1,26 @@
+services:
+
+  fronttier:
+    build: ./frontTier
+    ports:
+      - "4566:4566"
+    depends_on:
+      - booktier
+      - ordertier
+    volumes:
+      - ./data:/app/data
+
+
+  booktier:
+    build: ./bookTier
+    ports:
+      - "4560:4560"
+    volumes:
+      - ./data:/app/data
+
+  ordertier:
+    build: ./orderTier
+    ports:
+      - "4561:4561"
+    volumes:
+      - ./data:/app/data
