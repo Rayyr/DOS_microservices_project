@@ -55,6 +55,8 @@ BookTier → Manages book-related operations
 OrderTier → Handles order processing
 
 Each service runs in its own container and communicates via HTTP APIs.
+<p align="left">
+<img width="600" height="600" alt="597119458-3b65b455-268e-4ecc-b33a-d32d1687364f" src="https://github.com/user-attachments/assets/09694f7a-a5c2-4355-b8b0-b30f2bea6166" /></p>
 
 **🔹 FrontTier (Client Interface Layer)**
 
