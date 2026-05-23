@@ -1,7 +1,6 @@
 # Distributed Operating Systems lab2 : Turning the Bazar into an Amazon: Replication, Caching and Consistency 
 <br></br>
-
-
+**Note:** Unfortunately, when we executed the command **<p style="color:red">git push origin lab2 --force</p>**,all previous commits on the remote repository were overwritten by the local repository’s state. As a result, only a few commits are currently visible in the commit history.
 ## 📖 Project Overview
 This project is a containerized backend application built using **Java and Maven**, designed to provide a scalable and **modular API-based system**. The application follows a **multi-tier architecture and integrates with an SQLite database** for lightweight and efficient data storage.
 **Docker** is used to simplify deployment and ensure consistency across environments by packaging the application and its dependencies into isolated containers for each tier which they communicate among each others via HTTP calls .
