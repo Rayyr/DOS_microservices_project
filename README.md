@@ -520,6 +520,7 @@ All communication is done via REST APIs over HTTP inside the Docker network.
 You can find there a set of cases for each request with the corrosponding response . 
 https://documenter.getpostman.com/view/53199814/2sBXiomA5e
 <br></br>
+Other docs : https://drive.google.com/drive/folders/1Rns-HoJ3-0DxrqK2HeXFdQcFPb695VRD?usp=sharing
 
 ## 👨‍🏫 Supervised By
 - Dr Samer Arandi
